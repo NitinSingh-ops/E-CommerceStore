@@ -1,0 +1,6 @@
+﻿aws_region        = "us-east-1"
+instance_type     = "t3.micro"
+key_name          = "ecommerce-terraform-key"
+dockerhub_username = "singhnit"
+docker_tag        = "v1"
+frontend_tag      = "v2"

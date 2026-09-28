@@ -1,21 +1,20 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 
-// API base URLs for each microservice
+// API base URLs routed through the frontend Nginx reverse proxy
 const API_GATEWAYS = {
-  user: process.env.REACT_APP_USER_SERVICE_URL || 'http://localhost:3001',
-  product: process.env.REACT_APP_PRODUCT_SERVICE_URL || 'http://localhost:3002',
-  cart: process.env.REACT_APP_CART_SERVICE_URL || 'http://localhost:3003',
-  order: process.env.REACT_APP_ORDER_SERVICE_URL || 'http://localhost:3004',
+  user: '/user',
+  product: '/product',
+  cart: '/cart',
+  order: '/order',
 };
 
-// Create axios instances for each service
+// Create axios instances for each microservice
 const createApiInstance = (baseURL) => {
   const instance = axios.create({
     baseURL,
     timeout: 10000,
   });
 
-  // Add auth token to requests
   instance.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem('token');
@@ -27,7 +26,6 @@ const createApiInstance = (baseURL) => {
     (error) => Promise.reject(error)
   );
 
-  // Handle auth errors
   instance.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -43,7 +41,6 @@ const createApiInstance = (baseURL) => {
   return instance;
 };
 
-// API instances
 export const userApi = createApiInstance(API_GATEWAYS.user);
 export const productApi = createApiInstance(API_GATEWAYS.product);
 export const cartApi = createApiInstance(API_GATEWAYS.cart);
@@ -71,9 +68,9 @@ export const productService = {
 export const cartService = {
   getCart: (userId) => cartApi.get(`/api/cart/${userId}`),
   addToCart: (userId, data) => cartApi.post(`/api/cart/${userId}/items`, data),
-  updateCartItem: (userId, productId, data) => 
+  updateCartItem: (userId, productId, data) =>
     cartApi.put(`/api/cart/${userId}/items/${productId}`, data),
-  removeFromCart: (userId, productId) => 
+  removeFromCart: (userId, productId) =>
     cartApi.delete(`/api/cart/${userId}/items/${productId}`),
   clearCart: (userId) => cartApi.delete(`/api/cart/${userId}`),
   validateCart: (userId) => cartApi.post(`/api/cart/${userId}/validate`),
@@ -81,7 +78,7 @@ export const cartService = {
 
 // Order Service APIs
 export const orderService = {
-  getUserOrders: (userId, params) => 
+  getUserOrders: (userId, params) =>
     orderApi.get(`/api/orders/user/${userId}`, { params }),
   getOrder: (id) => orderApi.get(`/api/orders/${id}`),
   createOrder: (data) => orderApi.post('/api/orders', data),
@@ -91,16 +88,12 @@ export const orderService = {
   getPaymentDetails: (orderId) => orderApi.get(`/api/payments/order/${orderId}`),
 };
 
-// Helper function to handle API errors
 export const handleApiError = (error) => {
   if (error.response) {
-    // Server responded with error status
     return error.response.data.message || 'An error occurred';
   } else if (error.request) {
-    // Request was made but no response received
     return 'Network error. Please check your connection.';
   } else {
-    // Something else happened
     return 'An unexpected error occurred';
   }
 };
